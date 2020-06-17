@@ -1,5 +1,5 @@
 ---
-handle: hugo-theme-codex
-heading: Hi, I'm Codex
-subheading: A minimal blog theme for hugo.
+handle: realauggieheschmeyer
+heading: Hi, I'm Auggie
+subheading: A product analyst, based in Columbus, OH.
 ---

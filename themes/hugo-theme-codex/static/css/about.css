@@ -361,11 +361,16 @@ main {
 
 .social-icons__icon--twitter {
   background-image: url("/icons/twitter.svg");
-  margin-right: 2rem
+  margin-right: 2rem;
+}
+
+.social-icons__icon--instagram {
+  background-image: url("/icons/instagram.svg");
+  margin-right: 2rem;
 }
 
 .social-icons__icon--github {
-  background-image: url("/icons/github.svg")
+  background-image: url("/icons/github.svg");
 }
 
 .splash-container {
@@ -404,7 +409,7 @@ main {
 }
 
 .fancy {
-  color: #9013fe
+  color: #ea0000
 }
 
 .handle {
@@ -416,7 +421,7 @@ main {
 
 .writing {
   text-decoration: none;
-  color: #9013fe
+  color: #ea0000
 }
 
 main {
