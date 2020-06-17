@@ -3,10 +3,11 @@ title = "Auggie Heschmeyer"
 baseURL = "https://auggieheschmeyer.com/"
 copyright = "© Auggie Heschmeyer {year}"
 
-# This is just to get the exampleSite to work with the theme 
+# This is just to get the exampleSite to work with the theme
 # in this repository. Don't mimic this. When using the theme
 # you should place it in themes/codex and list theme = "codex"
 theme = "hugo-theme-codex"
+enableEmoji = true
 
 [[menu.main]]
   identifier = "about"
@@ -26,6 +27,12 @@ preserveTaxonomyNames = true
   tag = "tags"
 
 [params]
-  instagram = "realauggieheschmeyer"
+  linkedin = "auggieheschmeyer"
   twitter = "realauggiehesch"
   github = "realauggieheschmeyer"
+
+[permalinks]
+  authors = "/author/:slug/"
+  tags = "/tag/:slug/"
+  categories = "/category/:slug/"
+  publication_types = "/publication-type/:slug/"
