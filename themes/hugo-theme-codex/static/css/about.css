@@ -359,18 +359,19 @@ main {
   background-repeat: no-repeat
 }
 
-.social-icons__icon--twitter {
-  background-image: url("/icons/twitter.svg");
-  margin-right: 2rem;
-}
-
-.social-icons__icon--instagram {
-  background-image: url("/icons/instagram.svg");
+.social-icons__icon--linkedin {
+  background-image: url("/icons/linkedin.svg");
   margin-right: 2rem;
 }
 
 .social-icons__icon--github {
   background-image: url("/icons/github.svg");
+  margin-right: 2rem;
+}
+
+.social-icons__icon--twitter {
+  background-image: url("/icons/twitter.svg");
+  margin-right: 2rem;
 }
 
 .splash-container {
@@ -409,7 +410,7 @@ main {
 }
 
 .fancy {
-  color: #ea0000;
+  color: #ffd1dc;
 }
 
 .handle {
@@ -421,7 +422,7 @@ main {
 
 .writing {
   text-decoration: none;
-  color: #ea0000;
+  color: #ffd1dc;
 }
 
 main {
