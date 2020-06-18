@@ -1,0 +1,407 @@
+---
+title: "Is Bigfoot a Republican?"
+author: "Auggie Heschmeyer"
+date: "2020-06-17"
+description: An exploration of election results and Bigfoot data
+keywords:
+- Bigfoot
+- president
+- election
+- politics
+- trump
+- clinton
+- analytics
+- statistics
+- inference
+slug: is-bigfoot-a-republican
+stylesheet: post.css
+tags:
+- just for fun
+- statistical inference
+- polictics
+- analytics
+---
+
+
+
+<p>I recently came across <a href="https://data.world/timothyrenner/bfro-sightings-data">a dataset containing all the Bigfoot sightings from 1867 - 2017</a>. Naturally, I began to think about the political implications such data must contain. After all, the FBI recently revealed that they have been investigating Bigfoot since the 1970s. So if the government is interested, there must be a political reason. Such as Bigfoot being a dark money donor to the Republican Party!</p>
+<p>Okay, jokes and conspiracy theories aside, I did think it would be fun to see whether Bigfoot sightings lined up with the results of the last presidential election. This led me to the tongue-in-cheek question laid out in the title of this article. Please walk with me through this brief comparison of the results of the 2016 presidential election and historical Bigfoot sightings and see if we can’t answer the question we’ve always secretly had: <em>Is Bigfoot a Republican?</em></p>
+<p>Let’s get started!</p>
+<div id="importing-the-data" class="section level3">
+<h3>Importing the Data</h3>
+<p>The county-level election results can be found <a href="https://github.com/tonmcg/US_County_Level_Election_Results_08-16">here</a>.</p>
+<p>First, we’re going to load some packages as well as our data.</p>
+<pre class="r"><code>library(tidyverse)
+library(usmap)
+
+elec_results &lt;-
+  read.csv(&quot;https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-16/master/2016_US_County_Level_Presidential_Results.csv&quot;)
+bigfoot &lt;-
+  read.csv(
+    &quot;bfro_reports_geocoded.csv&quot;
+  )</code></pre>
+<p>We’re also going to use the <code>usmap</code> package to get some map data for plotting.</p>
+<pre class="r"><code>usa &lt;- map_data(&quot;usa&quot;)
+states &lt;- map_data(&#39;state&#39;)</code></pre>
+</div>
+<div id="exploring-the-data" class="section level3">
+<h3>Exploring the Data</h3>
+<p>Let’s take a <code>glimpse()</code> at these two datasets and see how they’re structured.</p>
+<pre class="r"><code>glimpse(elec_results)</code></pre>
+<pre><code>## Rows: 3,141
+## Columns: 11
+## $ X              &lt;int&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, …
+## $ votes_dem      &lt;dbl&gt; 93003, 93003, 93003, 93003, 93003, 93003, 93003, 93003…
+## $ votes_gop      &lt;dbl&gt; 130413, 130413, 130413, 130413, 130413, 130413, 130413…
+## $ total_votes    &lt;dbl&gt; 246588, 246588, 246588, 246588, 246588, 246588, 246588…
+## $ per_dem        &lt;dbl&gt; 0.3771595, 0.3771595, 0.3771595, 0.3771595, 0.3771595,…
+## $ per_gop        &lt;dbl&gt; 0.52887, 0.52887, 0.52887, 0.52887, 0.52887, 0.52887, …
+## $ diff           &lt;chr&gt; &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,…
+## $ per_point_diff &lt;chr&gt; &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.…
+## $ state_abbr     &lt;chr&gt; &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, …
+## $ county_name    &lt;chr&gt; &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Ala…
+## $ combined_fips  &lt;int&gt; 2013, 2016, 2020, 2050, 2060, 2068, 2070, 2090, 2100, …</code></pre>
+<pre class="r"><code>glimpse(bigfoot)</code></pre>
+<pre><code>## Rows: 4,586
+## Columns: 27
+## $ observed           &lt;chr&gt; &quot;Ed L. was salmon fishing with a companion in Prin…
+## $ location_details   &lt;chr&gt; &quot;East side of Prince William Sound&quot;, &quot;I would rath…
+## $ county             &lt;chr&gt; &quot;Valdez-Chitina-Whittier County&quot;, &quot;York County&quot;, &quot;…
+## $ state              &lt;chr&gt; &quot;Alaska&quot;, &quot;Pennsylvania&quot;, &quot;Oregon&quot;, &quot;Oklahoma&quot;, &quot;O…
+## $ title              &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Report 9765: Motorist and children ha…
+## $ latitude           &lt;dbl&gt; NA, NA, NA, 35.30110, 39.38745, 43.27314, 39.59200…
+## $ longitude          &lt;dbl&gt; NA, NA, NA, -99.17020, -81.67339, -76.89331, -119.…
+## $ date               &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;1973-09-28&quot;, &quot;1971-08-01&quot;, &quot;2003-09-2…
+## $ number             &lt;dbl&gt; 1261, 8000, 703, 9765, 4983, 26566, 5692, 438, 552…
+## $ classification     &lt;chr&gt; &quot;Class A&quot;, &quot;Class B&quot;, &quot;Class B&quot;, &quot;Class A&quot;, &quot;Class…
+## $ geohash            &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;9y32z667yc&quot;, &quot;dpjbj6r280&quot;, &quot;dr9q4m8h2…
+## $ temperature_high   &lt;dbl&gt; NA, NA, NA, 72.55, 76.32, 67.62, 88.56, NA, 75.83,…
+## $ temperature_mid    &lt;dbl&gt; NA, NA, NA, 63.225, 70.440, 58.160, 70.220, NA, 65…
+## $ temperature_low    &lt;dbl&gt; NA, NA, NA, 53.90, 64.56, 48.70, 51.88, NA, 55.67,…
+## $ dew_point          &lt;dbl&gt; NA, NA, NA, 50.86, 62.45, 54.06, 43.89, NA, 54.25,…
+## $ humidity           &lt;dbl&gt; NA, NA, NA, 0.73, 0.82, 0.75, 0.42, NA, 0.73, 0.82…
+## $ cloud_cover        &lt;dbl&gt; NA, NA, NA, 0.16, 0.86, 0.48, 0.00, NA, 0.22, 0.96…
+## $ moon_phase         &lt;dbl&gt; NA, NA, NA, 0.07, 0.32, 0.81, 0.02, NA, 0.10, 0.32…
+## $ precip_intensity   &lt;dbl&gt; NA, NA, NA, 0.0000, 0.0006, 0.0006, 0.0000, NA, 0.…
+## $ precip_probability &lt;dbl&gt; NA, NA, NA, 0.00, 0.21, 0.21, 0.00, NA, 0.30, 0.78…
+## $ precip_type        &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;rain&quot;, &quot;rain&quot;, &quot;&quot;, &quot;&quot;, &quot;rain&quot;, &quot;r…
+## $ pressure           &lt;dbl&gt; NA, NA, NA, 1017.29, 1022.74, 1020.75, 1011.96, NA…
+## $ summary            &lt;chr&gt; &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;Partly cloudy starting in the afterno…
+## $ uv_index           &lt;int&gt; NA, NA, NA, 6, 6, 4, 9, NA, 8, 6, 5, 6, 1, 2, 2, 3…
+## $ visibility         &lt;dbl&gt; NA, NA, NA, 10.00, 4.97, 9.53, 9.76, NA, 9.47, 6.4…
+## $ wind_bearing       &lt;int&gt; NA, NA, NA, 263, 156, 253, 197, NA, 234, 63, 235, …
+## $ wind_speed         &lt;dbl&gt; NA, NA, NA, 8.15, 3.02, 8.73, 1.96, NA, 2.47, 8.17…</code></pre>
+<p>We can see that the election results are broken down by county and state and show the percentage won by each major party. It also looks like the data set is missing county-level information for Alaska so we’ll have to filter is out when we do our data cleaning.</p>
+<p>As for the Bigfoot data, god bless whoever was managing this dataset. Whereas the election results featured a mere nine variables, this Bigfoot data gives us a whopping 27 bits of information about each and every Bigfoot sighting. They even included the phase of the moon! They didn’t have to go THAT hard for this dataset, but they did that. They did that for us. Sadly, I’m only going to use location data this time around. Maybe I’ll have to revisit this dataset one day and use it to plan my own Bigfoot sighting.</p>
+</div>
+<div id="preparing-the-data-for-analysis" class="section level3">
+<h3>Preparing the Data for Analysis</h3>
+<p>Let’s start by cleaning the election results.</p>
+<pre class="r"><code>county_winner_tbl &lt;- elec_results %&gt;%
+  as_tibble() %&gt;% 
+  filter(state_abbr != &quot;AK&quot;) %&gt;% 
+  mutate(
+    winner = ifelse(per_gop &gt; per_dem, 
+                    &quot;Donald Trump&quot;, 
+                    &quot;Hillary Clinton&quot;),
+    winner = winner %&gt;% 
+      as_factor() %&gt;% 
+      fct_relevel(&quot;Hillary Clinton&quot;),
+    state = openintro::abbr2state(state_abbr)
+  ) %&gt;% 
+  select(state, county = county_name, winner)
+
+county_winner_tbl %&gt;% 
+  head() %&gt;% 
+  kable(digits = 2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">state</th>
+<th align="left">county</th>
+<th align="left">winner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Autauga County</td>
+<td align="left">Donald Trump</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Baldwin County</td>
+<td align="left">Donald Trump</td>
+</tr>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Barbour County</td>
+<td align="left">Donald Trump</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Bibb County</td>
+<td align="left">Donald Trump</td>
+</tr>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Blount County</td>
+<td align="left">Donald Trump</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Bullock County</td>
+<td align="left">Hillary Clinton</td>
+</tr>
+</tbody>
+</table>
+<p>We got rid of Alaska, added a variable that indicated whether Trump or Clinton won depending on the larger percentage, and we converted our state abbreviations to their full names (so that we can join this data with the Bigfoot data).</p>
+<pre class="r"><code>bigfoot_simple_tbl &lt;- bigfoot %&gt;%
+  as_tibble() %&gt;% 
+  mutate(date = lubridate::ymd(date)) %&gt;% 
+  filter(date &lt;= &quot;2016-11-08&quot;) %&gt;% 
+  select(county, state, latitude, longitude)
+
+bigfoot_simple_tbl %&gt;% 
+  head() %&gt;% 
+  kable(digits = 2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">county</th>
+<th align="left">state</th>
+<th align="right">latitude</th>
+<th align="right">longitude</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Washita County</td>
+<td align="left">Oklahoma</td>
+<td align="right">35.30</td>
+<td align="right">-99.17</td>
+</tr>
+<tr class="even">
+<td align="left">Washington County</td>
+<td align="left">Ohio</td>
+<td align="right">39.39</td>
+<td align="right">-81.67</td>
+</tr>
+<tr class="odd">
+<td align="left">Wayne County</td>
+<td align="left">New York</td>
+<td align="right">43.27</td>
+<td align="right">-76.89</td>
+</tr>
+<tr class="even">
+<td align="left">Washoe County</td>
+<td align="left">Nevada</td>
+<td align="right">39.59</td>
+<td align="right">-119.97</td>
+</tr>
+<tr class="odd">
+<td align="left">Sullivan County</td>
+<td align="left">New Hampshire</td>
+<td align="right">43.42</td>
+<td align="right">-72.33</td>
+</tr>
+<tr class="even">
+<td align="left">Saunders County</td>
+<td align="left">Nebraska</td>
+<td align="right">41.23</td>
+<td align="right">-96.43</td>
+</tr>
+</tbody>
+</table>
+<p>All we did here was filter to sightings that occurred before the 2016 election and select our variables of interest. We won’t use <code>latitiude</code> and <code>longitude</code> in our statistical analyses, but they’ll come in handy later when we plot the sightings.</p>
+<p>Now let’s join the two datasets together by county and by state.</p>
+<pre class="r"><code>sightings_by_county_tbl &lt;- county_winner_tbl %&gt;%
+  left_join(bigfoot_simple_tbl %&gt;% 
+              group_by(state, county) %&gt;% 
+              count(name = &quot;sightings&quot;),
+            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;% 
+  mutate(sightings = replace_na(sightings, 0))
+
+sightings_by_county_tbl %&gt;% 
+  head() %&gt;% 
+  kable(digits = 2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">state</th>
+<th align="left">county</th>
+<th align="left">winner</th>
+<th align="right">sightings</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Autauga County</td>
+<td align="left">Donald Trump</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Baldwin County</td>
+<td align="left">Donald Trump</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Barbour County</td>
+<td align="left">Donald Trump</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Bibb County</td>
+<td align="left">Donald Trump</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Alabama</td>
+<td align="left">Blount County</td>
+<td align="left">Donald Trump</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">Alabama</td>
+<td align="left">Bullock County</td>
+<td align="left">Hillary Clinton</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Before joining, we did a count of sightings by county and then, after the join, filled in the null values for counties with no sightings.</p>
+<p>Time to ask some questions and get some answers!</p>
+</div>
+<div id="who-won-more-counties" class="section level3">
+<h3>Who won more counties?</h3>
+<p>We all know that Trump won, but let’s do a quick check to see by how much. We’re going to load the <code>tidyquant</code> package here because it makes nice charts with presidential-looking colors.</p>
+<pre class="r"><code>library(tidyquant)
+
+sightings_by_county_tbl %&gt;% 
+  count(winner) %&gt;% 
+  mutate(label = scales::comma(n)) %&gt;% 
+  ggplot(aes(x = winner, y = n, fill = winner, label = label)) +
+  geom_col() +
+  geom_label(fill = &quot;white&quot;) +
+  theme_tq() +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_tq() +
+  labs(
+    title = &quot;Trump won far more counties than Clinton&quot;,
+    x = &quot;&quot;,
+    y = &quot;Counties Won&quot;
+  ) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="is_bigfoot_a_republican_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>Phew. That’s quite a difference in counties. But we’re here to see what impact Bigfoot sightings have on these election results, so let’s ask another question.</p>
+</div>
+<div id="is-there-a-difference-in-the-average-number-of-bigfoot-sightings-between-each-candidates-counties" class="section level3">
+<h3>Is there a difference in the average number of Bigfoot sightings between each candidate’s counties?</h3>
+<p>If my suspicions are true and Bigfoot really is a GOP operative, it would make sense that his presence in certain counties would have an impact on the way that county voted. Perhaps a county voted for Trump because Bigfoot was seen numerous times getting the word out about making America great again.</p>
+<pre class="r"><code>sightings_by_county_tbl %&gt;% 
+  group_by(winner) %&gt;% 
+  summarize(avg_sightings = mean(sightings)) %&gt;% 
+  mutate(label = scales::number(avg_sightings, accuracy = 0.1)) %&gt;% 
+  ggplot(aes(x = winner, 
+             y = avg_sightings, 
+             fill = winner, 
+             label = label)) +
+  geom_col() +
+  geom_label(fill = &quot;white&quot;) +
+  theme_tq() +
+  scale_fill_tq() +
+  labs(
+    title = &quot;Clinton&#39;s counties had more Bigfoot sightings on average than Trump&#39;s&quot;,
+    x = &quot;&quot;,
+    y = &quot;Average Number of Sightings&quot;
+  ) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="is_bigfoot_a_republican_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Now this is a twist! Perhaps Bigfoot isn’t a Republican after all, but a Democrat!</p>
+<p>This may be an unexpected difference, but is it a statistically significant difference? Let’s use the <code>infer</code> package to do a statistical tests and be sure.</p>
+<pre class="r"><code>library(infer)
+
+t_test_tbl &lt;- sightings_by_county_tbl %&gt;% 
+  t_test(sightings ~ winner, 
+         order = c(&quot;Hillary Clinton&quot;, &quot;Donald Trump&quot;))
+
+t_test_tbl</code></pre>
+<pre><code>## # A tibble: 1 x 6
+##   statistic  t_df p_value alternative lower_ci upper_ci
+##       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt;    &lt;dbl&gt;
+## 1      2.53  534.  0.0118 two.sided      0.126     1.00</code></pre>
+<p>So it is significant! Check the p-value lower than the standard threshold of 0.05. It looks like the 95% confidence interval for our test shows that the difference in sightings ranges from about .12 to 1 more on average per county.</p>
+</div>
+<div id="what-proportion-of-those-counties-had-a-bigfoot-sighting" class="section level3">
+<h3>What proportion of those counties had a Bigfoot sighting?</h3>
+<p>Okay, so Clinton counties may have had a higher average number of sightings, but maybe that’s just because she had a smaller number of counties. Maybe Trump counties’ average was lower because there are a lot more of them. Let’s make a graphic to compare the proportions of counties with Bigfoot sightings between the two candidates.</p>
+<pre class="r"><code>sightings_by_county_tbl %&gt;% 
+  mutate(sightings_bin = ifelse(sightings &gt;= 1, 1, 0)) %&gt;%
+  group_by(winner) %&gt;%
+  summarize(prop = mean(sightings_bin)) %&gt;%
+  mutate(label = scales::percent(prop)) %&gt;%
+  ggplot(aes(x = winner,
+             y = prop, 
+             fill = winner, 
+             label = label)) +
+  geom_col() +
+  geom_label(fill = &quot;white&quot;) +
+  theme_tq() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_tq() +
+  labs(
+    title = &quot;Both candidates won a similar proportion of counties with Bigfoot sightings&quot;,
+    x = &quot;&quot;,
+    y = &quot;Counties with Bigfoot Sightings (%)&quot;
+  ) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="is_bigfoot_a_republican_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Interesting. Despite having a more sightings in Clinton counties, it looks like Bigfoot is just as present in Trump counties. How do I rectify this with the results of the test that showed Clinton counties with more average sightings? Has Bigfoot been going on vacation to Democratic counties and been spotted there over and over again? Maybe a map showing the sightings will help me sort things out.</p>
+</div>
+<div id="how-does-geographic-location-impact-bigfoot-sightings-and-election-results" class="section level3">
+<h3>How does geographic location impact Bigfoot sightings and election results?</h3>
+<p>First, let’s get the coordinates of our Bigfoot sightings.</p>
+<pre class="r"><code>lat_long_tbl &lt;- county_winner_tbl %&gt;%
+  left_join(bigfoot_simple_tbl,
+            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;% 
+  group_by(county) %&gt;% 
+  mutate(sightings = n())</code></pre>
+<p>Now let’s see where these sightings are happening. We’ll use the <code>usa</code> and <code>states</code> data that we downloaded earlier.</p>
+<pre class="r"><code>lat_long_tbl %&gt;%
+  filter(longitude &gt; -135) %&gt;%
+  ggplot(aes(x = longitude, y = latitude, color = winner)) +
+  geom_polygon(
+    data = states,
+    aes(x = long, y = lat, group = group),
+    fill = NA,
+    color = &#39;grey&#39;,
+    show.legend = FALSE
+  ) +
+  geom_jitter(aes(size = sightings), alpha = .5) +
+  theme_tq() +
+  scale_color_tq() +
+  labs(title = &quot;Bigfoot sightings mostly occur in sparsely populated, rural areas areas Trump won&quot;,
+       x = &quot;&quot;,
+       y = &quot;&quot;,
+       color = &quot;&quot;,
+       size = &quot;Number of Sightings&quot;) +
+  theme(
+    axis.text = element_blank(),
+    legend.text = element_text(size = 15),
+    line = element_blank(),
+    plot.title = element_text(hjust = .5),
+    plot.subtitle = element_text(hjust = .5),
+    rect = element_blank()
+  )</code></pre>
+<p><img src="is_bigfoot_a_republican_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>This definitely clears things up. Trump won a lot of sparsely-populated, rural counties throughout the US. “Sparsely-populated and rural” sounds a lot like places Bigfoot may want to live. All of those red dots represent Bigfoot sightings in Trump counties and most of them aren’t near any major metropolis. The blue dots, however, do seem to be centered around those metropolises. This supports my theory that perhaps, like the rest of us, Bigfoot enjoys visiting the city and given how many people there are in the city, the chances of him/her being spotted by more people goes way up.</p>
+</div>
+<div id="in-conclusion" class="section level3">
+<h3>In Conclusion</h3>
+<p>So, is Bigfoot a Republican? While I may have had a lot of fun playing around with this data, I don’t think I can definitively make that call. Given that he lives in rural, Trump-leaning counties, it seems like a safe assumption, though. Or maybe Bigfoot is a Democrat, but just can’t afford rent in the city. Perhaps we’ll see Bigfeet of the US unite and vote for a third-party candidate!</p>
+<p>Thanks for walking through this analysis with me. Feel free to reach out to on <a href="https://www.linkedin.com/in/auggieheschmeyer/">LinkedIn</a> or <a href="https://twitter.com/realauggiehesch">Twitter</a>. Happy analyzing!</p>
+</div>
