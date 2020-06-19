@@ -19,6 +19,13 @@ keywords:
 ```{r setup, include=FALSE}
 
 library(knitr)
+library(kableExtra)
+
+kable <- function(data, digits = 2, ...) {
+  knitr::kable(data, digits = digits, ...) %>% 
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), ...)
+}
+
 opts_chunk$set(
   echo = TRUE,
   message = FALSE)
@@ -63,17 +70,21 @@ states <- map_data('state')
 
 ## Exploring the Data
 
-Let's take a `glimpse()` at these two datasets and see how they're structured.
+Let's take a look at these two datasets and see how they're structured.
 
 ```{r}
 
-glimpse(elec_results)
+elec_results %>% 
+  head() %>% 
+  kable()
 
 ```
 
 ```{r}
 
-glimpse(bigfoot)
+# We're using `glimpse` here because the text field `observed` is enormous
+bigfoot %>% 
+  glimpse()
 
 ```
 
@@ -103,7 +114,7 @@ county_winner_tbl <- elec_results %>%
 
 county_winner_tbl %>% 
   head() %>% 
-  kable(digits = 2)
+  kable()
 
 ```
 
@@ -119,7 +130,7 @@ bigfoot_simple_tbl <- bigfoot %>%
 
 bigfoot_simple_tbl %>% 
   head() %>% 
-  kable(digits = 2)
+  kable()
 
 ```
 
@@ -137,7 +148,7 @@ sightings_by_county_tbl <- county_winner_tbl %>%
 
 sightings_by_county_tbl %>% 
   head() %>% 
-  kable(digits = 2)
+  kable()
 
 ```
 
@@ -212,7 +223,9 @@ t_test_tbl <- sightings_by_county_tbl %>%
   t_test(sightings ~ winner, 
          order = c("Hillary Clinton", "Donald Trump"))
 
-t_test_tbl
+t_test_tbl %>% 
+  kable(digits = 4)
+
 ```
 
 So it is significant! Check the p-value lower than the standard threshold of 0.05. It looks like the 95% confidence interval for our test shows that the difference in sightings ranges from about .12 to 1 more on average per county.
@@ -274,7 +287,7 @@ lat_long_tbl %>%
     color = 'grey',
     show.legend = FALSE
   ) +
-  geom_jitter(aes(size = sightings), alpha = .5) +
+  geom_jitter(aes(size = sightings), alpha = .2) +
   theme_tq() +
   scale_color_tq() +
   labs(title = "Bigfoot sightings mostly occur in sparsely populated, rural areas areas Trump won",
