@@ -238,7 +238,7 @@ t_test_tbl <- sightings_by_county_tbl %>%
          order = c("Hillary Clinton", "Donald Trump"))
 
 t_test_tbl %>% 
-  kable(digits = 4)
+  kable(digits = 2)
 
 ```
 
