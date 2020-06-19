@@ -19,11 +19,9 @@ keywords:
 ```{r setup, include=FALSE}
 
 library(knitr)
-
 opts_chunk$set(
   echo = TRUE,
-  message = FALSE,
-  tidy = TRUE)
+  message = FALSE)
 
 ```
 
@@ -33,7 +31,7 @@ Okay, jokes and conspiracy theories aside, I did think it would be fun to see wh
 
 Let's get started!
 
-### Importing the Data
+## Importing the Data
 
 The county-level election results can be found [here](https://github.com/tonmcg/US_County_Level_Election_Results_08-16).
 
@@ -46,6 +44,7 @@ library(usmap)
 
 elec_results <-
   read.csv("https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-16/master/2016_US_County_Level_Presidential_Results.csv")
+
 bigfoot <-
   read.csv(
     "bfro_reports_geocoded.csv"
@@ -62,24 +61,27 @@ states <- map_data('state')
 
 ```
 
-### Exploring the Data
+## Exploring the Data
 
 Let's take a `glimpse()` at these two datasets and see how they're structured.
 
 ```{r}
+
 glimpse(elec_results)
+
 ```
 
 ```{r}
-glimpse(bigfoot)
-```
 
+glimpse(bigfoot)
+
+```
 
 We can see that the election results are broken down by county and state and show the percentage won by each major party. It also looks like the data set is missing county-level information for Alaska so we'll have to filter is out when we do our data cleaning.
 
 As for the Bigfoot data, god bless whoever was managing this dataset. Whereas the election results featured a mere nine variables, this Bigfoot data gives us a whopping 27 bits of information about each and every Bigfoot sighting. They even included the phase of the moon! They didn't have to go THAT hard for this dataset, but they did that. They did that for us. Sadly, I'm only going to use location data this time around. Maybe I'll have to revisit this dataset one day and use it to plan my own Bigfoot sighting.
 
-### Preparing the Data for Analysis
+## Preparing the Data for Analysis
 
 Let's start by cleaning the election results.
 
@@ -122,7 +124,6 @@ bigfoot_simple_tbl %>%
 ```
 
 All we did here was filter to sightings that occurred before the 2016 election and select our variables of interest. We won't use `latitiude` and `longitude` in our statistical analyses, but they'll come in handy later when we plot the sightings.
-
 Now let's join the two datasets together by county and by state. 
 
 ```{r}
@@ -144,7 +145,7 @@ Before joining, we did a count of sightings by county and then, after the join, 
 
 Time to ask some questions and get some answers!
 
-### Who won more counties?
+## Who won more counties?
 
 We all know that Trump won, but let's do a quick check to see by how much. We're going to load the `tidyquant` package here because it makes nice charts with presidential-looking colors.
 
@@ -172,7 +173,7 @@ sightings_by_county_tbl %>%
 
 Phew. That's quite a difference in counties. But we're here to see what impact Bigfoot sightings have on these election results, so let's ask another question.
 
-### Is there a difference in the average number of Bigfoot sightings between each candidate's counties?
+## Is there a difference in the average number of Bigfoot sightings between each candidate's counties?
 
 If my suspicions are true and Bigfoot really is a GOP operative, it would make sense that his presence in certain counties would have an impact on the way that county voted. Perhaps a county voted for Trump because Bigfoot was seen numerous times getting the word out about making America great again. 
 
@@ -212,11 +213,9 @@ t_test_tbl <- sightings_by_county_tbl %>%
          order = c("Hillary Clinton", "Donald Trump"))
 
 t_test_tbl
-
 ```
 
 So it is significant! Check the p-value lower than the standard threshold of 0.05. It looks like the 95% confidence interval for our test shows that the difference in sightings ranges from about .12 to 1 more on average per county.
-
 ### What proportion of those counties had a Bigfoot sighting?
 
 Okay, so Clinton counties may have had a higher average number of sightings, but maybe that's just because she had a smaller number of counties. Maybe Trump counties' average was lower because there are a lot more of them. Let's make a graphic to compare the proportions of counties with Bigfoot sightings between the two candidates.
@@ -248,8 +247,7 @@ sightings_by_county_tbl %>%
 
 Interesting. Despite having a more sightings in Clinton counties, it looks like Bigfoot is just as present in Trump counties. How do I rectify this with the results of the test that showed Clinton counties with more average sightings? Has Bigfoot been going on vacation to Democratic counties and been spotted there over and over again? Maybe a map showing the sightings will help me sort things out.
 
-### How does geographic location impact Bigfoot sightings and election results?
-
+## How does geographic location impact Bigfoot sightings and election results?
 First, let's get the coordinates of our Bigfoot sightings.
 
 ```{r}
@@ -297,8 +295,7 @@ lat_long_tbl %>%
 
 This definitely clears things up. Trump won a lot of sparsely-populated, rural counties throughout the US. "Sparsely-populated and rural" sounds a lot like places Bigfoot may want to live. All of those red dots represent Bigfoot sightings in Trump counties and most of them aren't near any major metropolis. The blue dots, however, do seem to be centered around those metropolises. This supports my theory that perhaps, like the rest of us, Bigfoot enjoys visiting the city and given how many people there are in the city, the chances of him/her being spotted by more people goes way up.
 
-### In Conclusion
-
+## In Conclusion
 So, is Bigfoot a Republican? While I may have had a lot of fun playing around with this data, I don't think I can definitively make that call. Given that he lives in rural, Trump-leaning counties, it seems like a safe assumption, though. Or maybe Bigfoot is a Democrat, but just can't afford rent in the city. Perhaps we'll see Bigfeet of the US unite and vote for a third-party candidate!
 
 Thanks for walking through this analysis with me. Feel free to reach out to on [LinkedIn](https://www.linkedin.com/in/auggieheschmeyer/) or [Twitter](https://twitter.com/realauggiehesch). Happy analyzing!
