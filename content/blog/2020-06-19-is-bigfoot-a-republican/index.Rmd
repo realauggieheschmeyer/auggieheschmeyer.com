@@ -35,7 +35,7 @@ kable <- function(data, digits = 2, ...) {
     kable_styling(
       bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
       latex_options = "striped", 
-      full_width = F,
+      full_width = T,
       ...
     )
 }
@@ -84,21 +84,17 @@ states <- map_data('state')
 
 ## Exploring the Data
 
-Let's take a look at these two datasets and see how they're structured.
+Let's take a `glimpse` at these two datasets and see how they're structured.
 
 ```{r}
 
-elec_results %>% 
-  head() %>% 
-  kable()
+glimpse(elec_results)
 
 ```
 
 ```{r}
 
-# We're using `glimpse` here because the text field `observed` is enormous
-bigfoot %>% 
-  glimpse()
+glimpse(bigfoot)
 
 ```
 

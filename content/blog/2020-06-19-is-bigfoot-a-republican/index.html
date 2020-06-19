@@ -43,264 +43,22 @@ states &lt;- map_data(&#39;state&#39;)</code></pre>
 </div>
 <div id="exploring-the-data" class="section level2">
 <h2>Exploring the Data</h2>
-<p>Let’s take a look at these two datasets and see how they’re structured.</p>
-<pre class="r"><code>elec_results %&gt;% 
-  head() %&gt;% 
-  kable()</code></pre>
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:center;">
-X
-</th>
-<th style="text-align:center;">
-votes_dem
-</th>
-<th style="text-align:center;">
-votes_gop
-</th>
-<th style="text-align:center;">
-total_votes
-</th>
-<th style="text-align:center;">
-per_dem
-</th>
-<th style="text-align:center;">
-per_gop
-</th>
-<th style="text-align:center;">
-diff
-</th>
-<th style="text-align:center;">
-per_point_diff
-</th>
-<th style="text-align:center;">
-state_abbr
-</th>
-<th style="text-align:center;">
-county_name
-</th>
-<th style="text-align:center;">
-combined_fips
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center;">
-0
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2013
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-1
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2016
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-2
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2020
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-3
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2050
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-4
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2060
-</td>
-</tr>
-<tr>
-<td style="text-align:center;">
-5
-</td>
-<td style="text-align:center;">
-93003
-</td>
-<td style="text-align:center;">
-130413
-</td>
-<td style="text-align:center;">
-246588
-</td>
-<td style="text-align:center;">
-0.38
-</td>
-<td style="text-align:center;">
-0.53
-</td>
-<td style="text-align:center;">
-37,410
-</td>
-<td style="text-align:center;">
-15.17%
-</td>
-<td style="text-align:center;">
-AK
-</td>
-<td style="text-align:center;">
-Alaska
-</td>
-<td style="text-align:center;">
-2068
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code># We&#39;re using `glimpse` here because the text field `observed` is enormous
-bigfoot %&gt;% 
-  glimpse()</code></pre>
+<p>Let’s take a <code>glimpse</code> at these two datasets and see how they’re structured.</p>
+<pre class="r"><code>glimpse(elec_results)</code></pre>
+<pre><code>## Rows: 3,141
+## Columns: 11
+## $ X              &lt;int&gt; 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, …
+## $ votes_dem      &lt;dbl&gt; 93003, 93003, 93003, 93003, 93003, 93003, 93003, 93003…
+## $ votes_gop      &lt;dbl&gt; 130413, 130413, 130413, 130413, 130413, 130413, 130413…
+## $ total_votes    &lt;dbl&gt; 246588, 246588, 246588, 246588, 246588, 246588, 246588…
+## $ per_dem        &lt;dbl&gt; 0.3771595, 0.3771595, 0.3771595, 0.3771595, 0.3771595,…
+## $ per_gop        &lt;dbl&gt; 0.52887, 0.52887, 0.52887, 0.52887, 0.52887, 0.52887, …
+## $ diff           &lt;chr&gt; &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,410&quot;, &quot;37,…
+## $ per_point_diff &lt;chr&gt; &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.17%&quot;, &quot;15.…
+## $ state_abbr     &lt;chr&gt; &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, &quot;AK&quot;, …
+## $ county_name    &lt;chr&gt; &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Alaska&quot;, &quot;Ala…
+## $ combined_fips  &lt;int&gt; 2013, 2016, 2020, 2050, 2060, 2068, 2070, 2090, 2100, …</code></pre>
+<pre class="r"><code>glimpse(bigfoot)</code></pre>
 <pre><code>## Rows: 4,586
 ## Columns: 27
 ## $ observed           &lt;chr&gt; &quot;Ed L. was salmon fishing with a companion in Prin…
@@ -353,7 +111,7 @@ bigfoot %&gt;%
 county_winner_tbl %&gt;% 
   head() %&gt;% 
   kable()</code></pre>
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:center;">
@@ -446,7 +204,7 @@ Hillary Clinton
 bigfoot_simple_tbl %&gt;% 
   head() %&gt;% 
   kable()</code></pre>
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:center;">
@@ -562,7 +320,7 @@ Now let’s join the two datasets together by county and by state.</p>
 sightings_by_county_tbl %&gt;% 
   head() %&gt;% 
   kable()</code></pre>
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:center;">
@@ -724,7 +482,7 @@ t_test_tbl &lt;- sightings_by_county_tbl %&gt;%
 
 t_test_tbl %&gt;% 
   kable(digits = 2)</code></pre>
-<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:center;">
