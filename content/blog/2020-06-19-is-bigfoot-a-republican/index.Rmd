@@ -239,6 +239,7 @@ t_test_tbl %>%
 ```
 
 So it is significant! Check the p-value lower than the standard threshold of 0.05. It looks like the 95% confidence interval for our test shows that the difference in sightings ranges from about .12 to 1 more on average per county.
+
 ### What proportion of those counties had a Bigfoot sighting?
 
 Okay, so Clinton counties may have had a higher average number of sightings, but maybe that's just because she had a smaller number of counties. Maybe Trump counties' average was lower because there are a lot more of them. Let's make a graphic to compare the proportions of counties with Bigfoot sightings between the two candidates.
@@ -271,6 +272,7 @@ sightings_by_county_tbl %>%
 Interesting. Despite having a more sightings in Clinton counties, it looks like Bigfoot is just as present in Trump counties. How do I rectify this with the results of the test that showed Clinton counties with more average sightings? Has Bigfoot been going on vacation to Democratic counties and been spotted there over and over again? Maybe a map showing the sightings will help me sort things out.
 
 ## How does geographic location impact Bigfoot sightings and election results?
+
 First, let's get the coordinates of our Bigfoot sightings.
 
 ```{r}
