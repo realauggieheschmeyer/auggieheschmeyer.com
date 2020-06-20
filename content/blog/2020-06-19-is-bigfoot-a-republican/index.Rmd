@@ -323,4 +323,4 @@ This definitely clears things up. Trump won a lot of sparsely-populated, rural c
 ## In Conclusion
 So, is Bigfoot a Republican? While I may have had a lot of fun playing around with this data, I don't think I can definitively make that call. Given that he lives in rural, Trump-leaning counties, it seems like a safe assumption, though. Or maybe Bigfoot is a Democrat, but just can't afford rent in the city. Perhaps we'll see Bigfeet of the US unite and vote for a third-party candidate!
 
-Thanks for walking through this analysis with me. Feel free to reach out to on [LinkedIn](https://www.linkedin.com/in/auggieheschmeyer/) or [Twitter](https://twitter.com/realauggiehesch). Happy analyzing!
+Thanks for walking through this analysis with me. You can find all of the data and code related to this analysis in [this GitHub repo](https://github.com/realauggieheschmeyer/is_bigfoot_a_republican). Feel free to reach out to on [LinkedIn](https://www.linkedin.com/in/auggieheschmeyer/) or [Twitter](https://twitter.com/realauggiehesch). Happy analyzing!
