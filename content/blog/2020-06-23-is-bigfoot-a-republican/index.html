@@ -1,7 +1,7 @@
 ---
 title: Is Bigfoot a Republican?
 author: Auggie Heschmeyer
-date: '2020-06-19'
+date: '2020-06-23'
 slug: is-bigfoot-a-republican
 tags:
 - just for fun
@@ -95,21 +95,21 @@ states &lt;- map_data(&#39;state&#39;)</code></pre>
 <h2>Preparing the Data for Analysis</h2>
 <p>Let’s start by cleaning the election results.</p>
 <pre class="r"><code>county_winner_tbl &lt;- elec_results %&gt;%
-  as_tibble() %&gt;% 
-  filter(state_abbr != &quot;AK&quot;) %&gt;% 
+  as_tibble() %&gt;%
+  filter(state_abbr != &quot;AK&quot;) %&gt;%
   mutate(
-    winner = ifelse(per_gop &gt; per_dem, 
-                    &quot;Donald Trump&quot;, 
+    winner = ifelse(per_gop &gt; per_dem,
+                    &quot;Donald Trump&quot;,
                     &quot;Hillary Clinton&quot;),
-    winner = winner %&gt;% 
-      as_factor() %&gt;% 
+    winner = winner %&gt;%
+      as_factor() %&gt;%
       fct_relevel(&quot;Hillary Clinton&quot;),
     state = openintro::abbr2state(state_abbr)
-  ) %&gt;% 
+  ) %&gt;%
   select(state, county = county_name, winner)
 
-county_winner_tbl %&gt;% 
-  head() %&gt;% 
+county_winner_tbl %&gt;%
+  head() %&gt;%
   kable()</code></pre>
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -196,13 +196,13 @@ Hillary Clinton
 </table>
 <p>We got rid of Alaska, added a variable that indicated whether Trump or Clinton won depending on the larger percentage, and we converted our state abbreviations to their full names (so that we can join this data with the Bigfoot data).</p>
 <pre class="r"><code>bigfoot_simple_tbl &lt;- bigfoot %&gt;%
-  as_tibble() %&gt;% 
-  mutate(date = lubridate::ymd(date)) %&gt;% 
-  filter(date &lt;= &quot;2016-11-08&quot;) %&gt;% 
+  as_tibble() %&gt;%
+  mutate(date = lubridate::ymd(date)) %&gt;%
+  filter(date &lt;= &quot;2016-11-08&quot;) %&gt;%
   select(county, state, latitude, longitude)
 
-bigfoot_simple_tbl %&gt;% 
-  head() %&gt;% 
+bigfoot_simple_tbl %&gt;%
+  head() %&gt;%
   kable()</code></pre>
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -311,14 +311,14 @@ Nebraska
 <p>All we did here was filter to sightings that occurred before the 2016 election and select our variables of interest. We won’t use <code>latitiude</code> and <code>longitude</code> in our statistical analyses, but they’ll come in handy later when we plot the sightings.
 Now let’s join the two datasets together by county and by state.</p>
 <pre class="r"><code>sightings_by_county_tbl &lt;- county_winner_tbl %&gt;%
-  left_join(bigfoot_simple_tbl %&gt;% 
-              group_by(state, county) %&gt;% 
+  left_join(bigfoot_simple_tbl %&gt;%
+              group_by(state, county) %&gt;%
               count(name = &quot;sightings&quot;),
-            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;% 
+            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;%
   mutate(sightings = replace_na(sightings, 0))
 
-sightings_by_county_tbl %&gt;% 
-  head() %&gt;% 
+sightings_by_county_tbl %&gt;%
+  head() %&gt;%
   kable()</code></pre>
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -432,9 +432,9 @@ Hillary Clinton
 <p>We all know that Trump won, but let’s do a quick check to see by how much. We’re going to load the <code>tidyquant</code> package here because it makes nice charts with presidential-looking colors.</p>
 <pre class="r"><code>library(tidyquant)
 
-sightings_by_county_tbl %&gt;% 
-  count(winner) %&gt;% 
-  mutate(label = scales::comma(n)) %&gt;% 
+sightings_by_county_tbl %&gt;%
+  count(winner) %&gt;%
+  mutate(label = scales::comma(n)) %&gt;%
   ggplot(aes(x = winner, y = n, fill = winner, label = label)) +
   geom_col() +
   geom_label(fill = &quot;white&quot;) +
@@ -453,13 +453,13 @@ sightings_by_county_tbl %&gt;%
 <div id="is-there-a-difference-in-the-average-number-of-bigfoot-sightings-between-each-candidates-counties" class="section level2">
 <h2>Is there a difference in the average number of Bigfoot sightings between each candidate’s counties?</h2>
 <p>If my suspicions are true and Bigfoot really is a GOP operative, it would make sense that his presence in certain counties would have an impact on the way that county voted. Perhaps a county voted for Trump because Bigfoot was seen numerous times getting the word out about making America great again.</p>
-<pre class="r"><code>sightings_by_county_tbl %&gt;% 
-  group_by(winner) %&gt;% 
-  summarize(avg_sightings = mean(sightings)) %&gt;% 
-  mutate(label = scales::number(avg_sightings, accuracy = 0.1)) %&gt;% 
-  ggplot(aes(x = winner, 
-             y = avg_sightings, 
-             fill = winner, 
+<pre class="r"><code>sightings_by_county_tbl %&gt;%
+  group_by(winner) %&gt;%
+  summarize(avg_sightings = mean(sightings)) %&gt;%
+  mutate(label = scales::number(avg_sightings, accuracy = 0.1)) %&gt;%
+  ggplot(aes(x = winner,
+             y = avg_sightings,
+             fill = winner,
              label = label)) +
   geom_col() +
   geom_label(fill = &quot;white&quot;) +
@@ -476,11 +476,11 @@ sightings_by_county_tbl %&gt;%
 <p>This may be an unexpected difference, but is it a statistically significant difference? Let’s use the <code>infer</code> package to do a statistical tests and be sure.</p>
 <pre class="r"><code>library(infer)
 
-t_test_tbl &lt;- sightings_by_county_tbl %&gt;% 
-  t_test(sightings ~ winner, 
+t_test_tbl &lt;- sightings_by_county_tbl %&gt;%
+  t_test(sightings ~ winner,
          order = c(&quot;Hillary Clinton&quot;, &quot;Donald Trump&quot;))
 
-t_test_tbl %&gt;% 
+t_test_tbl %&gt;%
   kable(digits = 2)</code></pre>
 <table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -532,14 +532,14 @@ two.sided
 <div id="what-proportion-of-those-counties-had-a-bigfoot-sighting" class="section level3">
 <h3>What proportion of those counties had a Bigfoot sighting?</h3>
 <p>Okay, so Clinton counties may have had a higher average number of sightings, but maybe that’s just because she had a smaller number of counties. Maybe Trump counties’ average was lower because there are a lot more of them. Let’s make a graphic to compare the proportions of counties with Bigfoot sightings between the two candidates.</p>
-<pre class="r"><code>sightings_by_county_tbl %&gt;% 
+<pre class="r"><code>sightings_by_county_tbl %&gt;%
   mutate(sightings_bin = ifelse(sightings &gt;= 1, 1, 0)) %&gt;%
   group_by(winner) %&gt;%
   summarize(prop = mean(sightings_bin)) %&gt;%
   mutate(label = scales::percent(prop)) %&gt;%
   ggplot(aes(x = winner,
-             y = prop, 
-             fill = winner, 
+             y = prop,
+             fill = winner,
              label = label)) +
   geom_col() +
   geom_label(fill = &quot;white&quot;) +
@@ -561,8 +561,8 @@ two.sided
 <p>First, let’s get the coordinates of our Bigfoot sightings.</p>
 <pre class="r"><code>lat_long_tbl &lt;- county_winner_tbl %&gt;%
   left_join(bigfoot_simple_tbl,
-            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;% 
-  group_by(county) %&gt;% 
+            by = c(&quot;state&quot;, &quot;county&quot;)) %&gt;%
+  group_by(county) %&gt;%
   mutate(sightings = n())</code></pre>
 <p>Now let’s see where these sightings are happening. We’ll use the <code>usa</code> and <code>states</code> data that we downloaded earlier.</p>
 <pre class="r"><code>lat_long_tbl %&gt;%
