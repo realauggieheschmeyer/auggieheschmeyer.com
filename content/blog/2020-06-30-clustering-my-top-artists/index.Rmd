@@ -59,7 +59,7 @@ access_token <- get_spotify_access_token()
 
 I recently discovered the [`spotifyr`](https://www.rcharlie.com/spotifyr/) package that allows you to access the Spotify API data through R. More importantly, it allows you the opportunity to download and analyze your own listening data. As a data dilettante and an avid Spotify user, I thought it would make a fun exercise to see if there are any patterns within the music I listen to and if I can back up my self-described musical tastes ("alternative rock with a pop bent") with data.
 
-In this post I'll take a look at my top artists and their genres to see how similar they are. In my next post, I will look at my top songs or, as Spotify calls them, *tracks*.
+In this post I'll take a look at my top artists and their genres to see how similar they are. [In my next post](https://www.auggieheschmeyer.com/blog/clustering-my-top-tracks/), I will look at my top songs or, as Spotify calls them, *tracks*.
 
 ## Setting Up the API
 
@@ -347,4 +347,4 @@ It looks like my self-described musical taste ("alternative rock with a pop bent
 
 This type of analysis could easily be applied to many areas of business, even those that aren't at all related to music. One could easily imagine using my Amazon shopping habits or library checkout history to perform very similar analyses. Even more interesting would be taking the results of all of those analyses and combining them to come up with a robust customer profile and, perhaps, using that for marketing efforts in completely different retail areas.
 
-Thanks for walking through this analysis with me. You can find all of the data and code related to this analysis in [this GitHub repo](https://github.com/realauggieheschmeyer/analyzing_my_spotify). Feel free to reach out to me on [LinkedIn](https://www.linkedin.com/in/auggieheschmeyer/) or [Twitter](https://twitter.com/realauggiehesch). And check back next week for part two of this analysis where we group together my top songs using Spotify's audio features. Happy analyzing!
+Thanks for walking through this analysis with me. You can find all of the data and code related to this analysis in [this GitHub repo](https://github.com/realauggieheschmeyer/analyzing_my_spotify). Feel free to reach out to me on [LinkedIn](https://www.linkedin.com/in/auggieheschmeyer/) or [Twitter](https://twitter.com/realauggiehesch). And check back next week for [part two of this analysis](https://www.auggieheschmeyer.com/blog/clustering-my-top-tracks/) where we group together my top songs using Spotify's audio features. Happy analyzing!
