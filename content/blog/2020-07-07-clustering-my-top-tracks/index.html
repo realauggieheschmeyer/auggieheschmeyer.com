@@ -1,0 +1,575 @@
+---
+title: Clustering My Top Spotify Tracks
+author: Auggie Heschmeyer
+date: '2020-07-07'
+slug: clustering-my-top-tracks
+tags:
+- just-for-fun
+- exploratory-data-analysis
+- machine-learning
+- unsupervised-learning
+description: Using unsupervised machine learning to find clusters among my top Spotify tracks.
+keywords:
+- just-for-fun
+- exploratory-data-analysis
+- machine-learning
+- unsupervised-learning
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="/rmarkdown-libs/bsTable/bootstrapTable.min.css" rel="stylesheet" />
+
+
+<p>I recently discovered the <a href="https://www.rcharlie.com/spotifyr/"><code>spotifyr</code></a> package that allows you to access the Spotify API data within R. More importantly, it allows you the opportunity to download and analyze your own listening data. As a data nerd and an avid Spotify user, I thought it would make a fun exercise to see if there are any patterns within the music I listen to and if I can back up my self-described musical tastes (“alternative rock with a pop bent”) with data.</p>
+<p>In this post I’ll take a look at my top <em>tracks</em> and their audio features to see if I can find my own “genres.” This analysis is part two of an an earlier analysis in which <a href="https://www.auggieheschmeyer.com/blog/clustering-my-top-artists/">I clustered my top artists</a>. Check that one out first as I went into slightly more detail about accessing my data as well as utilizing some text mining methodologies.</p>
+<div id="setting-up-the-api" class="section level2">
+<h2>Setting Up the API</h2>
+<p>If you followed along with my last post, you should have your Spotify credentials on-hand and be ready to get your access token. Otherwise, check out the <a href="https://www.rcharlie.com/spotifyr/"><code>spotifyr</code> website</a> for instructions on how to get access to the Spotify API. Once you have your credentials, you can run the following lines of code to get your access token.</p>
+<pre class="r"><code>library(spotifyr)
+
+Sys.setenv(SPOTIFY_CLIENT_ID = &#39;xxxxxxxxxxxxxxxxxxxxx&#39;)
+Sys.setenv(SPOTIFY_CLIENT_SECRET = &#39;xxxxxxxxxxxxxxxxxxxxx&#39;)
+
+access_token &lt;- get_spotify_access_token()</code></pre>
+</div>
+<div id="getting-my-top-tracks-data" class="section level2">
+<h2>Getting My Top Tracks Data</h2>
+<p>Just like last time, we are going to use the <code>get_my_top_artists_or_tracks()</code> function. We’re going to keep <code>limit</code> and <code>time_range</code> the same (<code>50</code> and <code>"medium_term"</code>) as we are interested in analyzing the same time period as we did last time. This time, however, we are going to switch our <code>type</code> argument from <code>"artist"</code> to <code>"tracks"</code>. Again, we’re going to save the output of <code>get_my_top_artists_or_tracks()</code> as a tibble.</p>
+<pre class="r"><code>library(tidyverse)
+
+my_top_songs_tbl &lt;- get_my_top_artists_or_tracks(
+  type = &quot;tracks&quot;,
+  limit = 50,
+  time_range = &quot;medium_term&quot;
+) %&gt;% 
+  as_tibble()</code></pre>
+<p>Let’s take a quick <code>glimpse()</code> at our data.</p>
+<pre class="r"><code>my_top_songs_tbl %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 50
+## Columns: 29
+## $ artists                      &lt;list&gt; [&lt;data.frame[1 x 6]&gt;, &lt;data.frame[1 x 6…
+## $ available_markets            &lt;list&gt; [&lt;&quot;AD&quot;, &quot;AE&quot;, &quot;AR&quot;, &quot;AT&quot;, &quot;AU&quot;, &quot;BE&quot;, &quot;…
+## $ disc_number                  &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1…
+## $ duration_ms                  &lt;int&gt; 237520, 247265, 167920, 234372, 246444, …
+## $ explicit                     &lt;lgl&gt; TRUE, FALSE, FALSE, FALSE, FALSE, FALSE,…
+## $ href                         &lt;chr&gt; &quot;https://api.spotify.com/v1/tracks/7szue…
+## $ id                           &lt;chr&gt; &quot;7szuecWAPwGoV1e5vGu8tl&quot;, &quot;7DmTaJoM7L020…
+## $ is_local                     &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, FALSE…
+## $ name                         &lt;chr&gt; &quot;In Your Eyes&quot;, &quot;Tonight (I Wish I Was Y…
+## $ popularity                   &lt;int&gt; 91, 74, 51, 69, 64, 64, 67, 29, 84, 68, …
+## $ preview_url                  &lt;chr&gt; &quot;https://p.scdn.co/mp3-preview/69d5cf6ee…
+## $ track_number                 &lt;int&gt; 10, 14, 1, 1, 19, 3, 1, 12, 1, 2, 18, 8,…
+## $ type                         &lt;chr&gt; &quot;track&quot;, &quot;track&quot;, &quot;track&quot;, &quot;track&quot;, &quot;tra…
+## $ uri                          &lt;chr&gt; &quot;spotify:track:7szuecWAPwGoV1e5vGu8tl&quot;, …
+## $ album.album_type             &lt;chr&gt; &quot;ALBUM&quot;, &quot;ALBUM&quot;, &quot;SINGLE&quot;, &quot;SINGLE&quot;, &quot;A…
+## $ album.artists                &lt;list&gt; [&lt;data.frame[1 x 6]&gt;, &lt;data.frame[1 x 6…
+## $ album.available_markets      &lt;list&gt; [&lt;&quot;AD&quot;, &quot;AE&quot;, &quot;AR&quot;, &quot;AT&quot;, &quot;AU&quot;, &quot;BE&quot;, &quot;…
+## $ album.href                   &lt;chr&gt; &quot;https://api.spotify.com/v1/albums/4yP0h…
+## $ album.id                     &lt;chr&gt; &quot;4yP0hdKOZPNshxUOjY0cZj&quot;, &quot;0o5xjCboti8vX…
+## $ album.images                 &lt;list&gt; [&lt;data.frame[3 x 3]&gt;, &lt;data.frame[3 x 3…
+## $ album.name                   &lt;chr&gt; &quot;After Hours&quot;, &quot;Notes On A Conditional F…
+## $ album.release_date           &lt;chr&gt; &quot;2020-03-20&quot;, &quot;2020-05-22&quot;, &quot;2020-02-07&quot;…
+## $ album.release_date_precision &lt;chr&gt; &quot;day&quot;, &quot;day&quot;, &quot;day&quot;, &quot;day&quot;, &quot;day&quot;, &quot;day&quot;…
+## $ album.total_tracks           &lt;int&gt; 14, 22, 1, 1, 22, 8, 3, 13, 1, 2, 20, 11…
+## $ album.type                   &lt;chr&gt; &quot;album&quot;, &quot;album&quot;, &quot;album&quot;, &quot;album&quot;, &quot;alb…
+## $ album.uri                    &lt;chr&gt; &quot;spotify:album:4yP0hdKOZPNshxUOjY0cZj&quot;, …
+## $ album.external_urls.spotify  &lt;chr&gt; &quot;https://open.spotify.com/album/4yP0hdKO…
+## $ external_ids.isrc            &lt;chr&gt; &quot;USUG12000657&quot;, &quot;GBK3W1901075&quot;, &quot;USA2P19…
+## $ external_urls.spotify        &lt;chr&gt; &quot;https://open.spotify.com/track/7szuecWA…</code></pre>
+<p>We are provided with a lot of data about individual tracks, most of it revolving around the album details. One thing to notice about this data is that our <code>artists</code> information is stored as a nested list. This is because certain tracks have featured artists or are collaborations. Let’s make our first processing step extracting those artist names and combining them in a logical way. We’ll do that by defining our own function that unnests the <code>artists</code> column and concatenates the names using a <code>/</code>.</p>
+<pre class="r"><code>combine_artists &lt;- function(df) {
+  
+  df %&gt;% 
+    unnest() %&gt;% 
+    pull(name) %&gt;% 
+    str_c(collapse = &quot; / &quot;)
+  
+}</code></pre>
+<p>Now we’ll take our new function and use it to clean our data. We’re going to bring along the <code>popularity</code> variable as it proved valuable in clustering my top artists together last time. We’re also going to rename the song-related variables so that we don’t run into an error message when we unnest the similarly-named artist variables.</p>
+<pre class="r"><code>my_top_songs_cleaned_tbl &lt;- my_top_songs_tbl %&gt;%
+  mutate(my_ranking = row_number()) %&gt;% 
+  rename(
+    song = name,
+    song_id = id
+  ) %&gt;%
+  mutate(artist = map_chr(artists, combine_artists)) %&gt;%
+  select(song_id, song, artist, popularity, my_ranking)
+
+my_top_songs_cleaned_tbl %&gt;% 
+  head(10) %&gt;% 
+  kable()</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:center;">
+song_id
+</th>
+<th style="text-align:center;">
+song
+</th>
+<th style="text-align:center;">
+artist
+</th>
+<th style="text-align:center;">
+popularity
+</th>
+<th style="text-align:center;">
+my_ranking
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+7szuecWAPwGoV1e5vGu8tl
+</td>
+<td style="text-align:center;">
+In Your Eyes
+</td>
+<td style="text-align:center;">
+The Weeknd
+</td>
+<td style="text-align:center;">
+91
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7DmTaJoM7L020qm3egqNsM
+</td>
+<td style="text-align:center;">
+Tonight (I Wish I Was Your Boy)
+</td>
+<td style="text-align:center;">
+The 1975
+</td>
+<td style="text-align:center;">
+74
+</td>
+<td style="text-align:center;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3kL1eGyxKYipkJoGGjxy0J
+</td>
+<td style="text-align:center;">
+Paradise Lost, a poem by John Milton
+</td>
+<td style="text-align:center;">
+The Used
+</td>
+<td style="text-align:center;">
+51
+</td>
+<td style="text-align:center;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5DYD4zlGiFlkpLaf2Bk8Vl
+</td>
+<td style="text-align:center;">
+Your Love (Déjà Vu)
+</td>
+<td style="text-align:center;">
+Glass Animals
+</td>
+<td style="text-align:center;">
+69
+</td>
+<td style="text-align:center;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3eeU7oRuEUbFHMrsJ8rvpk
+</td>
+<td style="text-align:center;">
+What Should I Say
+</td>
+<td style="text-align:center;">
+The 1975
+</td>
+<td style="text-align:center;">
+64
+</td>
+<td style="text-align:center;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2FhJvFKyZng57iVQmFayVw
+</td>
+<td style="text-align:center;">
+Daphne Blue
+</td>
+<td style="text-align:center;">
+The Band CAMINO
+</td>
+<td style="text-align:center;">
+64
+</td>
+<td style="text-align:center;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2hVKFfp7Rmr2XPK31jFCrX
+</td>
+<td style="text-align:center;">
+Mindreader
+</td>
+<td style="text-align:center;">
+A Day To Remember
+</td>
+<td style="text-align:center;">
+67
+</td>
+<td style="text-align:center;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1SJb9JphV8Q7iwGJhXqtzj
+</td>
+<td style="text-align:center;">
+Hummer
+</td>
+<td style="text-align:center;">
+Foals
+</td>
+<td style="text-align:center;">
+29
+</td>
+<td style="text-align:center;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6xZ4Q2k2ompmDppyeESIY8
+</td>
+<td style="text-align:center;">
+Level of Concern
+</td>
+<td style="text-align:center;">
+Twenty One Pilots
+</td>
+<td style="text-align:center;">
+84
+</td>
+<td style="text-align:center;">
+9
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1n4vgMWmmNlXrvyxQFhUEl
+</td>
+<td style="text-align:center;">
+If You’re Too Shy (Let Me Know)
+</td>
+<td style="text-align:center;">
+The 1975
+</td>
+<td style="text-align:center;">
+68
+</td>
+<td style="text-align:center;">
+10
+</td>
+</tr>
+</tbody>
+</table>
+<p>Nice and clean, right? If you remember the types of artists I listened to from my last post, the types of songs on this list shouldn’t be much of a surprise. There is a fair mix of pop and alternative music with a little heavy stuff thrown in for good measure. Kind of makes sense that The 1975 was my most played band, doesn’t it?</p>
+<p>Let’s take a quick look at the popularity of my top songs across all Spotify users.</p>
+<pre class="r"><code>library(ggdark)
+
+my_top_songs_cleaned_tbl %&gt;% 
+  mutate(
+    plot_name = str_c(song, artist, sep = &quot;\n&quot;),
+    plot_name = plot_name %&gt;% as_factor() %&gt;% fct_reorder(popularity)
+  ) %&gt;% 
+  arrange(my_ranking) %&gt;% 
+  slice(1:10) %&gt;% 
+  ggplot(aes(x = popularity, y = plot_name)) +
+  geom_col(fill = &quot;#1DB954&quot;) +
+  dark_theme_minimal() +
+  labs(
+    title = &quot;My Top 10 Songs Over the Last Six Months&quot;,
+    subtitle = &quot;Ordered by Song&#39;s Popularity&quot;,
+    x = &quot;Popularity&quot;,
+    y = &quot;Song&quot;
+  )</code></pre>
+<p><img src="/blog/2020-07-07-clustering-my-top-tracks/index_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>It makes sense that the two artists who have had songs in the Top 10 before are the most popular songs. And it makes sense that “Hummer” is at the bottom as it’s a 13-year-old song.</p>
+</div>
+<div id="getting-track-audio-features" class="section level2">
+<h2>Getting Track Audio Features</h2>
+<p>One of the coolest features of the Spotify API is that you can access track audio features. Audio features act as a sort of DNA for each song on Spotify and measure aspects of the music such as their energy levels, how likely the song is to be a live recording, how happy the song is and more traditional measure like key and tempo. You can learn more about The Echo Nest, Spotify’s acquisition that enabled this technology, <a href="https://techcrunch.com/2014/03/06/spotify-acquires-the-echo-nest/">in this article</a>.</p>
+<p>We are going to use the following chunk of code to download the audio features for each of my top tracks.</p>
+<pre class="r"><code>my_top_songs_features_tbl &lt;- my_top_songs_cleaned_tbl %&gt;%
+  mutate(audio_features = map(song_id, get_track_audio_features)) %&gt;% 
+  unnest(audio_features) %&gt;%
+  mutate(duration_m = duration_ms / 1000 / 60) %&gt;% 
+  select(-contains(&quot;id&quot;), -uri, -track_href, -analysis_url, -type, -duration_ms)</code></pre>
+<p>I included the song duration (<code>duration_m</code>) as I thought it might make an interesting variable to include in our clustering later.</p>
+<p>Let’s see how this data looks.</p>
+<pre class="r"><code>my_top_songs_features_tbl %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 50
+## Columns: 17
+## $ song             &lt;chr&gt; &quot;In Your Eyes&quot;, &quot;Tonight (I Wish I Was Your Boy)&quot;, &quot;…
+## $ artist           &lt;chr&gt; &quot;The Weeknd&quot;, &quot;The 1975&quot;, &quot;The Used&quot;, &quot;Glass Animals…
+## $ popularity       &lt;int&gt; 91, 74, 51, 69, 64, 64, 67, 29, 84, 68, 69, 68, 48, …
+## $ my_ranking       &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1…
+## $ danceability     &lt;dbl&gt; 0.667, 0.478, 0.521, 0.854, 0.676, 0.567, 0.471, 0.6…
+## $ energy           &lt;dbl&gt; 0.719, 0.456, 0.961, 0.671, 0.661, 0.925, 0.947, 0.7…
+## $ key              &lt;int&gt; 7, 7, 6, 7, 1, 1, 0, 9, 4, 2, 11, 4, 11, 2, 5, 4, 7,…
+## $ loudness         &lt;dbl&gt; -5.371, -6.844, -3.277, -7.158, -8.909, -2.775, -3.0…
+## $ mode             &lt;int&gt; 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1…
+## $ speechiness      &lt;dbl&gt; 0.0346, 0.0529, 0.1290, 0.0543, 0.0481, 0.0906, 0.11…
+## $ acousticness     &lt;dbl&gt; 0.0028500, 0.1220000, 0.0058100, 0.0190000, 0.092300…
+## $ instrumentalness &lt;dbl&gt; 0.00008100, 0.00001980, 0.00037100, 0.38300000, 0.00…
+## $ liveness         &lt;dbl&gt; 0.0736, 0.2140, 0.0420, 0.1050, 0.1020, 0.3480, 0.30…
+## $ valence          &lt;dbl&gt; 0.7170, 0.2680, 0.3650, 0.6310, 0.1450, 0.7040, 0.52…
+## $ tempo            &lt;dbl&gt; 100.021, 171.900, 134.973, 107.994, 105.006, 118.006…
+## $ time_signature   &lt;int&gt; 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4…
+## $ duration_m       &lt;dbl&gt; 3.958667, 4.121083, 2.798667, 3.906200, 4.107417, 3.…</code></pre>
+<p>As you can see, there is a lot of data here and most of it is on different scales. Let’s plot some histograms to get a better sense of how this data is distributed.</p>
+<pre class="r"><code>my_top_songs_features_tbl %&gt;% 
+  pivot_longer(cols = danceability:duration_m, names_to = &quot;feature&quot;, values_to = &quot;measure&quot;) %&gt;% 
+  ggplot(aes(x = measure)) +
+  geom_histogram(fill = &quot;#1DB954&quot;, bins = sqrt(50)) +
+  dark_theme_minimal() +
+  facet_wrap(~ feature, scales = &quot;free&quot;)</code></pre>
+<p><img src="/blog/2020-07-07-clustering-my-top-tracks/index_files/figure-html/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>What immediately jumps out to me is that <code>time_signature</code> has only a single value: 4/4. That means we can drop this variable when it comes time to start clustering as it won’t add any information to the model.</p>
+<p>After that, I notice that <code>valence</code> (a measure of the positivity of the track) and <code>danceability</code> are almost normally distributed with some slight skew towards the low and high ends, respectively. Diagnosing why my top songs seem to skew towards being unhappy songs that make you want to dance is an issue that I’m sure will make my future therapist very rich.</p>
+<p><code>Acousticness</code>, <code>duration_m</code>, <code>liveness</code>, <code>instrumentalness</code>, and <code>speechiness</code> all feature large right skews indicating a preference for short, heavily produced, studio recordings with lots of singing. <code>loudness</code>, however, features a slight left skew indicating that I like my short, heavily produced, studio recordings with lots of singing played <strong>loud</strong>.</p>
+<p>You can read more about the definitions of these variables as well as seeing their population distributions in the <a href="https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/">Spotify for Developers reference guide</a>.</p>
+<p>Let’s go ahead and normalize all of these audio features to make sure that none of them have undue weight in our clustering algorithm.</p>
+<pre class="r"><code>library(recipes)
+
+song_features_processed_tbl &lt;- recipe(song + artist ~ ., data = my_top_songs_features_tbl) %&gt;% 
+  step_rm(time_signature, my_ranking, instrumentalness, key) %&gt;% 
+  step_normalize(all_numeric()) %&gt;%
+  prep() %&gt;% 
+  juice()</code></pre>
+</div>
+<div id="k-means-clustering" class="section level2">
+<h2>K-Means Clustering</h2>
+<p>Now that we have our data in a cluster-friendly format, let’s define the clustering function we used in the last analysis. This function allowed us to utilize a k-means clustering algorithm in a tidy way.</p>
+<pre class="r"><code>kmeans_mapper &lt;- function(data, centers = 3) {
+  
+  data %&gt;%
+    kmeans(centers = centers, nstart = 100)
+  
+}</code></pre>
+<p>Just like last time, we’re going to use the <code>glance()</code> function to extract relevant metrics from the algorithm and the <code>set.seed()</code> function to ensure reproducible.</p>
+<pre class="r"><code>library(broom)
+
+set.seed(1234)
+kmeans_songs_mapped_tbl &lt;- tibble(centers = 1:15) %&gt;% 
+  mutate(k_means = centers %&gt;% map(kmeans_mapper, data = song_features_processed_tbl %&gt;% select(-song, -artist)),
+         glance = k_means %&gt;% map(glance))</code></pre>
+<p>Now, we’ll extract the necessary information from each model to make an elbow plot and see if there is an ideal number of clusters.</p>
+<pre class="r"><code>kmeans_songs_mapped_tbl %&gt;%
+  unnest(glance) %&gt;%
+  select(centers, tot.withinss) %&gt;%
+  ggplot(aes(x = centers, y = tot.withinss)) +
+  geom_point(color = &quot;#1DB954&quot;, size = 4) +
+  geom_line(color = &quot;#1DB954&quot;) +
+  dark_theme_minimal() +
+  labs(title = &quot;Elbow plot&quot;)</code></pre>
+<p><img src="/blog/2020-07-07-clustering-my-top-tracks/index_files/figure-html/unnamed-chunk-13-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>There is no discernible “elbow” to this plot so any choice we make will be rather arbitrary. With that in mind, I’m going to pick six centers because we have more variables than last time and I want to allow the algorithm adequate bandwidth to capture their variety.</p>
+</div>
+<div id="dimensionality-reduction" class="section level2">
+<h2>Dimensionality Reduction</h2>
+<p>Just like last time, we’re going to make use of the UMAP non-linear dimensionality reduction technique. We’ll also bind our song and artist names onto these new, reduced variables.</p>
+<pre class="r"><code>library(umap)
+
+set.seed(1234)
+umap_songs_obj &lt;- song_features_processed_tbl %&gt;% 
+  select(-song, -artist) %&gt;% 
+  umap()
+
+umap_songs_results_tbl &lt;- umap_songs_obj$layout %&gt;% 
+  as_tibble() %&gt;%
+  set_names(c(&quot;x&quot;, &quot;y&quot;)) %&gt;% 
+  bind_cols(song_features_processed_tbl %&gt;% 
+              select(song, artist))
+
+umap_songs_results_tbl %&gt;% 
+  head() %&gt;% 
+  kable()</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:center;">
+x
+</th>
+<th style="text-align:center;">
+y
+</th>
+<th style="text-align:center;">
+song
+</th>
+<th style="text-align:center;">
+artist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+-0.84
+</td>
+<td style="text-align:center;">
+-0.99
+</td>
+<td style="text-align:center;">
+In Your Eyes
+</td>
+<td style="text-align:center;">
+The Weeknd
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+0.39
+</td>
+<td style="text-align:center;">
+-2.40
+</td>
+<td style="text-align:center;">
+Tonight (I Wish I Was Your Boy)
+</td>
+<td style="text-align:center;">
+The 1975
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+0.29
+</td>
+<td style="text-align:center;">
+1.73
+</td>
+<td style="text-align:center;">
+Paradise Lost, a poem by John Milton
+</td>
+<td style="text-align:center;">
+The Used
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+-0.40
+</td>
+<td style="text-align:center;">
+-1.76
+</td>
+<td style="text-align:center;">
+Your Love (Déjà Vu)
+</td>
+<td style="text-align:center;">
+Glass Animals
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+1.02
+</td>
+<td style="text-align:center;">
+-2.44
+</td>
+<td style="text-align:center;">
+What Should I Say
+</td>
+<td style="text-align:center;">
+The 1975
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+-0.70
+</td>
+<td style="text-align:center;">
+1.31
+</td>
+<td style="text-align:center;">
+Daphne Blue
+</td>
+<td style="text-align:center;">
+The Band CAMINO
+</td>
+</tr>
+</tbody>
+</table>
+<p>All of that complex audio feature data has now been reduced to a concise and easily-to-visualize pair of features.</p>
+</div>
+<div id="plotting-the-track-clusters" class="section level2">
+<h2>Plotting the Track Clusters</h2>
+<p>Now that we’ve done the hard work of clustering the tracks and reducing the number of variables we use to describe them, now comes the fun part: visualizing the clusters. We’ll use the following chunks of code to pull the cluster information, use the <code>augment()</code> function to extract the cluster numbers and then join those cluster numbers to the UMAP-reduced variables.</p>
+<pre class="r"><code>kmeans_songs_obj &lt;- kmeans_songs_mapped_tbl %&gt;% 
+  pull(k_means) %&gt;% 
+  pluck(6)
+
+kmeans_clusters_songs_tbl &lt;- kmeans_songs_obj %&gt;% 
+  augment(song_features_processed_tbl) %&gt;% 
+  select(song, artist, .cluster)
+
+umap_kmeans_results_songs_tbl &lt;- umap_songs_results_tbl %&gt;% 
+  left_join(kmeans_clusters_songs_tbl,
+            by = c(&quot;song&quot;, &quot;artist&quot;))
+
+umap_kmeans_results_songs_tbl %&gt;% 
+  glimpse()</code></pre>
+<pre><code>## Rows: 50
+## Columns: 5
+## $ x        &lt;dbl&gt; -0.838680492, 0.394494164, 0.287686937, -0.398263557, 1.0247…
+## $ y        &lt;dbl&gt; -0.99265991, -2.40376774, 1.72518333, -1.76394602, -2.438640…
+## $ song     &lt;fct&gt; &quot;In Your Eyes&quot;, &quot;Tonight (I Wish I Was Your Boy)&quot;, &quot;Paradise…
+## $ artist   &lt;fct&gt; The Weeknd, The 1975, The Used, Glass Animals, The 1975, The…
+## $ .cluster &lt;fct&gt; 2, 1, 4, 2, 1, 5, 4, 3, 2, 1, 2, 4, 3, 4, 5, 5, 3, 2, 2, 3, …</code></pre>
+<p>Before plotting, we’re going to add a <code>label_text</code> variable so that we have some nice labeling on our finished plot. We’re also going to use the <code>ggrepel</code> package to ensure that our labels are plotted in a readable way.</p>
+<pre class="r"><code>library(ggrepel)
+
+umap_kmeans_results_songs_tbl %&gt;%
+  mutate(
+    label_text = str_glue(&quot;Song: {song}\nArtist: {artist}\nCluster: {.cluster}&quot;)
+  ) %&gt;% 
+  ggplot(aes(x, y, color = .cluster)) +
+  geom_point() +
+  geom_label_repel(aes(label = label_text), 
+                   size = 2, 
+                   fill = &quot;black&quot;) +
+  dark_theme_minimal() +
+  labs(
+    title = &quot;Grouping My Top Tracks By Audio Features&quot;,
+    x = &quot;&quot;,
+    y = &quot;&quot;
+  ) +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/blog/2020-07-07-clustering-my-top-tracks/index_files/figure-html/unnamed-chunk-16-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>It looks like six clusters wasn’t too bad of a choice. Nice!</p>
+<p>The clustering algorithm has found some interesting relationships between these track features. For instance, Cluster 1 is made up of mostly of songs off of The 1975’s new album, songs that range from 80’s-style pop songs to introspective electronica. At the same time, “After Hours” by The Weeknd ended up in there, too. “After Hours” definitely fits the bill of “introspective electronica” but also has a little bit of an 80’s influence to it, like a lot of The Weeknd’s music. I never would’ve put The Weeknd and The 1975 in the same group, but the algorithm picked up on their similarities better than I did.</p>
+</div>
+<div id="in-conclusion" class="section level2">
+<h2>In Conclusion</h2>
+<p>When we grouped my top artists, we discussed ways in which clustering could be used to understand individual customer habits (ie. Amazon purchase history). In this analysis, we observed a way that clustering could be used to understand the shopping habits of group of individuals, even discovering relationships that might not appear obvious on the surface. For instance, if we were looking at this analysis from the context of a grocery chain, we might see that customers who buy Oikos greek yogurt and Gia Russa pasta sauce also seem to be buying large quantities of charcoal. We may not understand what these customers are doing with these things, but we don’t necessarily have to. All we have to know is that there is some sort of relationship and offer a discount on charcoal to customers who are buying greek yogurt and pasta sauce to potentially increase sales.</p>
+<p>Thanks for walking through this analysis with me. You can find all of the data and code related to this analysis in <a href="https://github.com/realauggieheschmeyer/analyzing_my_spotify">this GitHub repo</a>. Check out the <code>spotifyr</code> package yourself and feel free to tag me on <a href="https://twitter.com/realauggiehesch">Twitter</a> with what you find. I’d love to see. And feel free to reach out to me on <a href="https://www.linkedin.com/in/auggieheschmeyer/">LinkedIn</a>. Happy analyzing!</p>
+</div>
